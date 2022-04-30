@@ -23,7 +23,7 @@ static bool GLCheckError(const char* function,const char * file,int line)
 {
     while (GLenum error = glGetError())
     {
-        std::cout << "[OpenGL Error] (" << error << ") " << 
+        std::cout << "[OpenGL Error] (" << error << ")" << 
             " " <<  function << "in file " << file << " :" << line << std::endl;
         return false;
     }
