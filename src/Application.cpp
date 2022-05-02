@@ -123,8 +123,8 @@ int main(void)
     if (!glfwInit())
         return -1;
 
-    
- 
+
+
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
@@ -135,6 +135,7 @@ int main(void)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Buffer change time interval 
     // glewInit must call after glfw context establish
     if (glewInit() != GLEW_OK)
         std::cout << "Error" << std::endl;
@@ -165,7 +166,7 @@ int main(void)
     // const void * with can be ignored,but when 0 change 8,it should be add
     GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
     // location = 0 is the index in glVertexAttribPointer(0,...)
-    
+
 
     // genbuffers for indices and bind ,put data to it
     unsigned int ibo;
@@ -175,19 +176,25 @@ int main(void)
 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
     std::cout << "VERTEX" << std::endl;
-    std::cout << source.VertexSource<< std::endl;
+    std::cout << source.VertexSource << std::endl;
     std::cout << "FRAGMENT" << std::endl;
     std::cout << source.FragmentSource << std::endl;
 
     const unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
     GLCall(glUseProgram(shader)); // use already linked program 
-    
+    // use uniform to color
+    GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+    ASSERT(location != -1);
+    GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
+
+    float r = 0.0f;
+    float increment = 0.05f;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
+        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // uniform use in each per draw different from vertex
         // draw call let graphics card to draw ,system call 
         // glDrawArrays(GL_TRIANGLES, 0, 3);
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // function use indices to draw ,instead of glDrawArrays
@@ -199,7 +206,12 @@ int main(void)
 
         // we use macro to reuse it 
         //GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr)); // use macro to warp it 
+        if (r > 1.0f)
+            increment = -0.5f;
+        else if (r < 0.0f)
+            increment = 0.5f;
 
+        r += increment;
         /* Swap front and back buffers */
         GLCall(glfwSwapBuffers(window));
 
