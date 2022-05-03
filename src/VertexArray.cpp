@@ -1,4 +1,5 @@
 #include "VertexArray.h"
+#include "VertexBufferLayout.h"	// here,we should add VertexBufferLayout.h
 #include "Renderer.h"
 #include "GL/glew.h"
 
@@ -47,12 +48,12 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
 }
 
 
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
 	GLCall(glBindVertexArray(m_RendererID));
 }
 
-void VertexArray::Unbind()
+void VertexArray::Unbind() const
 {
 	GLCall(glBindVertexArray(0));
 }

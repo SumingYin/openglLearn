@@ -10,14 +10,8 @@
 #include "IndexBuffer.h"
 #include "VertexArray.h"
 #include "shader.h"
-
-
-
-
-
-
-
-
+#include "Renderer.h"
+#include "VertexBufferLayout.h"
 
 
 int main(void)
@@ -83,26 +77,18 @@ int main(void)
 
         float r = 0.0f;
         float increment = 0.05f;
+        Renderer renderer;
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window))
         {
             /* Render here */
-            GLCall(glClear(GL_COLOR_BUFFER_BIT));
-            shader.Bind();
-            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-            //GLCall(glUseProgram(shader)); // use already linked program 
-            //GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // uniform use in each per draw different from vertex
-            // draw call let graphics card to draw ,system call 
-            // glDrawArrays(GL_TRIANGLES, 0, 3);
-            vao.Bind();
-            ib.Bind();
-            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // function use indices to draw ,instead of glDrawArrays
-            // glDrawElements will be used often.
-
+            renderer.Clear();
             //GLClearError(); // clear all error before,focus on next statement area
             //glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); // this statement is false
             //GLCheckError(); // show the error in the terminal,this will cause 1280 error code
-
+            shader.Bind();
+            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+            renderer.Draw(vao, ib, shader);
             // we use macro to reuse it 
             //GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr)); // use macro to warp it 
             if (r > 1.0f)
