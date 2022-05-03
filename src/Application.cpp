@@ -5,30 +5,10 @@
 #include <fstream>
 #include <sstream>
 
-// here __debugbreak used to stop the program,only in windows
-#define ASSERT(x) if(!(x)) __debugbreak();
-#define GLCall(x) GLClearError;\
-x;\
-ASSERT(GLCheckError(#x,__FILE__,__LINE__))
-
-
-
-// clear all errors
-static void GLClearError()
-{
-    while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLCheckError(const char* function,const char * file,int line)
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error] (" << error << ") " << 
-            " " <<  function << "in file " << file << " :" << line << std::endl;
-        return false;
-    }
-    return true;
-}   
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "VertexArray.h"
 
 
 
@@ -140,85 +120,82 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "Error" << std::endl;
     std::cout << glGetString(GL_VERSION) << std::endl;
-
-    float positions[] = {
-        -0.5f, -0.5f, // 0 means the first vertex ,a vertex not mean a position,but include other stuff like texture
-         0.5f, -0.5f, // 1
-         0.5f,  0.5f, // 2
-        -0.5f,  0.5f  // 3
-    };
-
-    unsigned int indices[] =
     {
-        0,1,2,
-        2,3,0
-    };
+        float positions[] = {
+            -0.5f, -0.5f, // 0 means the first vertex ,a vertex not mean a position,but include other stuff like texture
+             0.5f, -0.5f, // 1
+             0.5f,  0.5f, // 2
+            -0.5f,  0.5f  // 3
+        };
 
-    unsigned int buffer;
-    GLCall(glGenBuffers(1, &buffer)); // create buffer and bind,bind buffer like photo shop's layer,choose layer to operate
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-    // offer data to this buffer,docs.gl to see detail about this function
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), positions, GL_STATIC_DRAW));
-    // tell the graphics card the layout of buffer,what's in the memory?
-    // when buffer bind,we should enable our bind buffer attribute index,here is zero
-    GLCall(glEnableVertexAttribArray(0));
-    // glEnableVertexArrayAttrib(buffer, 0); the second way 
-    // const void * with can be ignored,but when 0 change 8,it should be add
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
-    // location = 0 is the index in glVertexAttribPointer(0,...)
+        unsigned int indices[] =
+        {
+            0,1,2,
+            2,3,0
+        };
+
+        // create vao vertex array object 
+        VertexArray vao;
+        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+        VertexBufferLayout layout;
+        layout.Push<float>(2);
+        vao.AddBuffer(vb, layout);
 
 
-    // genbuffers for indices and bind ,put data to it
-    unsigned int ibo;
-    GLCall(glGenBuffers(1, &ibo));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+        
 
-    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-    std::cout << "VERTEX" << std::endl;
-    std::cout << source.VertexSource << std::endl;
-    std::cout << "FRAGMENT" << std::endl;
-    std::cout << source.FragmentSource << std::endl;
+        // genbuffers for indices and bind ,put data to it
+        IndexBuffer ib(indices, 6);
 
-    const unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    GLCall(glUseProgram(shader)); // use already linked program 
-    // use uniform to color
-    GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-    ASSERT(location != -1);
-    GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
+        ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+        std::cout << "VERTEX" << std::endl;
+        std::cout << source.VertexSource << std::endl;
+        std::cout << "FRAGMENT" << std::endl;
+        std::cout << source.FragmentSource << std::endl;
 
-    float r = 0.0f;
-    float increment = 0.05f;
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        GLCall(glClear(GL_COLOR_BUFFER_BIT));
-        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // uniform use in each per draw different from vertex
-        // draw call let graphics card to draw ,system call 
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // function use indices to draw ,instead of glDrawArrays
-        // glDrawElements will be used often.
+        const unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+        GLCall(glUseProgram(shader)); // use already linked program 
+        // use uniform to color
+        GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+        ASSERT(location != -1);
+        GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-        //GLClearError(); // clear all error before,focus on next statement area
-        //glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); // this statement is false
-        //GLCheckError(); // show the error in the terminal,this will cause 1280 error code
+        float r = 0.0f;
+        float increment = 0.05f;
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(window))
+        {
+            /* Render here */
+            GLCall(glClear(GL_COLOR_BUFFER_BIT));
+            GLCall(glUseProgram(shader)); // use already linked program 
+            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // uniform use in each per draw different from vertex
+            // draw call let graphics card to draw ,system call 
+            // glDrawArrays(GL_TRIANGLES, 0, 3);
+            vao.Bind();
+            ib.Bind();
+            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // function use indices to draw ,instead of glDrawArrays
+            // glDrawElements will be used often.
 
-        // we use macro to reuse it 
-        //GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr)); // use macro to warp it 
-        if (r > 1.0f)
-            increment = -0.5f;
-        else if (r < 0.0f)
-            increment = 0.5f;
+            //GLClearError(); // clear all error before,focus on next statement area
+            //glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); // this statement is false
+            //GLCheckError(); // show the error in the terminal,this will cause 1280 error code
 
-        r += increment;
-        /* Swap front and back buffers */
-        GLCall(glfwSwapBuffers(window));
+            // we use macro to reuse it 
+            //GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr)); // use macro to warp it 
+            if (r > 1.0f)
+                increment = -0.5f;
+            else if (r < 0.0f)
+                increment = 0.5f;
 
-        /* Poll for and process events */
-        GLCall(glfwPollEvents());
-    }
-    GLCall(glDeleteProgram(shader)); // delete the program we put in the graphics card
+            r += increment;
+            /* Swap front and back buffers */
+            GLCall(glfwSwapBuffers(window));
+
+            /* Poll for and process events */
+            GLCall(glfwPollEvents());
+        }
+        GLCall(glDeleteProgram(shader)); // delete the program we put in the graphics card
+    } // this {} for `destructor to complete their jobs, if we don't have this {} it will make errors,glfwTerminate() is close,check errors function will breakout 
     glfwTerminate();
     return 0;
 }
