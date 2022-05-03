@@ -9,7 +9,13 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
+
 #include "shader.h"
+
+
+
+
+
 
 
 
@@ -72,6 +78,7 @@ int main(void)
         // genbuffers for indices and bind ,put data to it
         IndexBuffer ib(indices, 6);
 
+
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
@@ -81,6 +88,7 @@ int main(void)
         vb.Unbind();
         ib.Unbind();
 
+
         float r = 0.0f;
         float increment = 0.05f;
         /* Loop until the user closes the window */
@@ -88,10 +96,12 @@ int main(void)
         {
             /* Render here */
             GLCall(glClear(GL_COLOR_BUFFER_BIT));
+
             shader.Bind();
             shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
             //GLCall(glUseProgram(shader)); // use already linked program 
             //GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // uniform use in each per draw different from vertex
+
             // draw call let graphics card to draw ,system call 
             // glDrawArrays(GL_TRIANGLES, 0, 3);
             vao.Bind();
@@ -117,7 +127,7 @@ int main(void)
             /* Poll for and process events */
             GLCall(glfwPollEvents());
         }
-        
+
     } // this {} for `destructor to complete their jobs, if we don't have this {} it will make errors,glfwTerminate() is close,check errors function will breakout 
     glfwTerminate();
     return 0;
